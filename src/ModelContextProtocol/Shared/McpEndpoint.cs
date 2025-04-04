@@ -39,16 +39,9 @@ internal abstract class McpEndpoint : IAsyncDisposable
         _logger = loggerFactory?.CreateLogger(GetType()) ?? NullLogger.Instance;
     }
 
-    protected void SetRequestHandler<TRequest, TResponse>(
-        string method,
-        Func<TRequest?, CancellationToken, Task<TResponse>> handler,
-        JsonTypeInfo<TRequest> requestTypeInfo,
-        JsonTypeInfo<TResponse> responseTypeInfo)
+    protected RequestHandlers RequestHandlers { get; } = [];
 
-        => _requestHandlers.Set(method, handler, requestTypeInfo, responseTypeInfo);
-
-    public void AddNotificationHandler(string method, Func<JsonRpcNotification, Task> handler)
-        => _notificationHandlers.Add(method, handler);
+    protected NotificationHandlers NotificationHandlers { get; } = [];
 
     public Task<JsonRpcResponse> SendRequestAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
         => GetSessionOrThrow().SendRequestAsync(request, cancellationToken);
