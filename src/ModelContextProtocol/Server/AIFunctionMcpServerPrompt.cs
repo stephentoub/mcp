@@ -97,7 +97,7 @@ internal sealed class AIFunctionMcpServerPrompt : McpServerPrompt
                     {
                         ExcludeFromSchema = true,
                         BindParameter = (pi, args) =>
-                            GetRequestContext(args)?.Server?.Services?.GetService(pi.ParameterType) ??
+                            GetRequestContext(args)?.Services?.GetService(pi.ParameterType) ??
                             (pi.HasDefaultValue ? null :
                              throw new ArgumentException("No service of the requested type was found.")),
                     };
@@ -109,7 +109,7 @@ internal sealed class AIFunctionMcpServerPrompt : McpServerPrompt
                     {
                         ExcludeFromSchema = true,
                         BindParameter = (pi, args) =>
-                            (GetRequestContext(args)?.Server?.Services as IKeyedServiceProvider)?.GetKeyedService(pi.ParameterType, keyedAttr.Key) ??
+                            (GetRequestContext(args)?.Services as IKeyedServiceProvider)?.GetKeyedService(pi.ParameterType, keyedAttr.Key) ??
                             (pi.HasDefaultValue ? null :
                              throw new ArgumentException("No service of the requested type was found.")),
                     };
@@ -208,7 +208,7 @@ internal sealed class AIFunctionMcpServerPrompt : McpServerPrompt
 
         AIFunctionArguments arguments = new()
         {
-            Services = request.Server?.Services,
+            Services = request.Services,
             Context = new Dictionary<object, object?>() { [typeof(RequestContext<GetPromptRequestParams>)] = request }
         };
 
