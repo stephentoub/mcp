@@ -45,11 +45,10 @@ public static class McpClientExtensions
     {
         Throw.IfNull(client);
 
-        return client.SendRequestAsync(
+        return client.SendRequestAsync<object?, EmptyResult>(
             RequestMethods.Ping,
             parameters: null,
-            McpJsonUtilities.JsonContext.Default.Object!,
-            McpJsonUtilities.JsonContext.Default.Object,
+            McpJsonUtilities.DefaultOptions,
             cancellationToken: cancellationToken);
     }
 
@@ -106,11 +105,10 @@ public static class McpClientExtensions
         string? cursor = null;
         do
         {
-            var toolResults = await client.SendRequestAsync(
+            var toolResults = await client.SendRequestAsync<ListToolsRequestParams, ListToolsResult>(
                 RequestMethods.ToolsList,
                 new() { Cursor = cursor },
-                McpJsonUtilities.JsonContext.Default.ListToolsRequestParams,
-                McpJsonUtilities.JsonContext.Default.ListToolsResult,
+                 McpJsonUtilities.DefaultOptions,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             tools ??= new List<McpClientTool>(toolResults.Tools.Count);
@@ -171,11 +169,10 @@ public static class McpClientExtensions
         string? cursor = null;
         do
         {
-            var toolResults = await client.SendRequestAsync(
+            var toolResults = await client.SendRequestAsync<ListToolsRequestParams, ListToolsResult>(
                 RequestMethods.ToolsList,
                 new() { Cursor = cursor },
-                McpJsonUtilities.JsonContext.Default.ListToolsRequestParams,
-                McpJsonUtilities.JsonContext.Default.ListToolsResult,
+                McpJsonUtilities.DefaultOptions,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             foreach (var tool in toolResults.Tools)
@@ -214,11 +211,10 @@ public static class McpClientExtensions
         string? cursor = null;
         do
         {
-            var promptResults = await client.SendRequestAsync(
+            var promptResults = await client.SendRequestAsync<ListPromptsRequestParams, ListPromptsResult>(
                 RequestMethods.PromptsList,
                 new() { Cursor = cursor },
-                McpJsonUtilities.JsonContext.Default.ListPromptsRequestParams,
-                McpJsonUtilities.JsonContext.Default.ListPromptsResult,
+                McpJsonUtilities.DefaultOptions,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             prompts ??= new List<McpClientPrompt>(promptResults.Prompts.Count);
@@ -269,11 +265,10 @@ public static class McpClientExtensions
         string? cursor = null;
         do
         {
-            var promptResults = await client.SendRequestAsync(
+            var promptResults = await client.SendRequestAsync<ListPromptsRequestParams, ListPromptsResult>(
                 RequestMethods.PromptsList,
                 new() { Cursor = cursor },
-                McpJsonUtilities.JsonContext.Default.ListPromptsRequestParams,
-                McpJsonUtilities.JsonContext.Default.ListPromptsResult,
+                McpJsonUtilities.DefaultOptions,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             foreach (var prompt in promptResults.Prompts)
@@ -324,11 +319,10 @@ public static class McpClientExtensions
         serializerOptions ??= McpJsonUtilities.DefaultOptions;
         serializerOptions.MakeReadOnly();
 
-        return client.SendRequestAsync(
+        return client.SendRequestAsync<GetPromptRequestParams, GetPromptResult>(
             RequestMethods.PromptsGet,
             new() { Name = name, Arguments = ToArgumentsDictionary(arguments, serializerOptions) },
-            McpJsonUtilities.JsonContext.Default.GetPromptRequestParams,
-            McpJsonUtilities.JsonContext.Default.GetPromptResult,
+            McpJsonUtilities.DefaultOptions,
             cancellationToken: cancellationToken);
     }
 
@@ -359,11 +353,10 @@ public static class McpClientExtensions
         string? cursor = null;
         do
         {
-            var templateResults = await client.SendRequestAsync(
+            var templateResults = await client.SendRequestAsync<ListResourceTemplatesRequestParams, ListResourceTemplatesResult>(
                 RequestMethods.ResourcesTemplatesList,
                 new() { Cursor = cursor },
-                McpJsonUtilities.JsonContext.Default.ListResourceTemplatesRequestParams,
-                McpJsonUtilities.JsonContext.Default.ListResourceTemplatesResult,
+                McpJsonUtilities.DefaultOptions,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             if (templates is null)
@@ -417,11 +410,10 @@ public static class McpClientExtensions
         string? cursor = null;
         do
         {
-            var templateResults = await client.SendRequestAsync(
+            var templateResults = await client.SendRequestAsync<ListResourceTemplatesRequestParams, ListResourceTemplatesResult>(
                 RequestMethods.ResourcesTemplatesList,
                 new() { Cursor = cursor },
-                McpJsonUtilities.JsonContext.Default.ListResourceTemplatesRequestParams,
-                McpJsonUtilities.JsonContext.Default.ListResourceTemplatesResult,
+                McpJsonUtilities.DefaultOptions,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             foreach (var template in templateResults.ResourceTemplates)
@@ -473,11 +465,10 @@ public static class McpClientExtensions
         string? cursor = null;
         do
         {
-            var resourceResults = await client.SendRequestAsync(
+            var resourceResults = await client.SendRequestAsync<ListResourcesRequestParams, ListResourcesResult>(
                 RequestMethods.ResourcesList,
                 new() { Cursor = cursor },
-                McpJsonUtilities.JsonContext.Default.ListResourcesRequestParams,
-                McpJsonUtilities.JsonContext.Default.ListResourcesResult,
+                McpJsonUtilities.DefaultOptions,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             if (resources is null)
@@ -531,11 +522,10 @@ public static class McpClientExtensions
         string? cursor = null;
         do
         {
-            var resourceResults = await client.SendRequestAsync(
+            var resourceResults = await client.SendRequestAsync<ListResourcesRequestParams, ListResourcesResult>(
                 RequestMethods.ResourcesList,
                 new() { Cursor = cursor },
-                McpJsonUtilities.JsonContext.Default.ListResourcesRequestParams,
-                McpJsonUtilities.JsonContext.Default.ListResourcesResult,
+                McpJsonUtilities.DefaultOptions,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             foreach (var resource in resourceResults.Resources)
@@ -563,11 +553,10 @@ public static class McpClientExtensions
         Throw.IfNull(client);
         Throw.IfNullOrWhiteSpace(uri);
 
-        return client.SendRequestAsync(
+        return client.SendRequestAsync<ReadResourceRequestParams, ReadResourceResult>(
             RequestMethods.ResourcesRead,
             new() { Uri = uri },
-            McpJsonUtilities.JsonContext.Default.ReadResourceRequestParams,
-            McpJsonUtilities.JsonContext.Default.ReadResourceResult,
+            McpJsonUtilities.DefaultOptions,
             cancellationToken: cancellationToken);
     }
 
@@ -628,15 +617,14 @@ public static class McpClientExtensions
             throw new ArgumentException($"Invalid reference: {validationMessage}", nameof(reference));
         }
 
-        return client.SendRequestAsync(
+        return client.SendRequestAsync<CompleteRequestParams, CompleteResult>(
             RequestMethods.CompletionComplete,
             new()
             {
                 Ref = reference,
                 Argument = new Argument { Name = argumentName, Value = argumentValue }
             },
-            McpJsonUtilities.JsonContext.Default.CompleteRequestParams,
-            McpJsonUtilities.JsonContext.Default.CompleteResult,
+            McpJsonUtilities.DefaultOptions,
             cancellationToken: cancellationToken);
     }
 
@@ -670,11 +658,10 @@ public static class McpClientExtensions
         Throw.IfNull(client);
         Throw.IfNullOrWhiteSpace(uri);
 
-        return client.SendRequestAsync(
+        return client.SendRequestAsync<SubscribeRequestParams, EmptyResult>(
             RequestMethods.ResourcesSubscribe,
             new() { Uri = uri },
-            McpJsonUtilities.JsonContext.Default.SubscribeRequestParams,
-            McpJsonUtilities.JsonContext.Default.EmptyResult,
+            McpJsonUtilities.DefaultOptions,
             cancellationToken: cancellationToken);
     }
 
@@ -739,11 +726,10 @@ public static class McpClientExtensions
         Throw.IfNull(client);
         Throw.IfNullOrWhiteSpace(uri);
 
-        return client.SendRequestAsync(
+        return client.SendRequestAsync<UnsubscribeRequestParams, EmptyResult>(
             RequestMethods.ResourcesUnsubscribe,
             new() { Uri = uri },
-            McpJsonUtilities.JsonContext.Default.UnsubscribeRequestParams,
-            McpJsonUtilities.JsonContext.Default.EmptyResult,
+            McpJsonUtilities.DefaultOptions,
             cancellationToken: cancellationToken);
     }
 
@@ -831,15 +817,14 @@ public static class McpClientExtensions
             return SendRequestWithProgressAsync(client, toolName, arguments, progress, serializerOptions, cancellationToken);
         }
 
-        return client.SendRequestAsync(
+        return client.SendRequestAsync<CallToolRequestParams, CallToolResponse>(
             RequestMethods.ToolsCall,
             new()
             {
                 Name = toolName,
                 Arguments = ToArgumentsDictionary(arguments, serializerOptions),
             },
-            McpJsonUtilities.JsonContext.Default.CallToolRequestParams,
-            McpJsonUtilities.JsonContext.Default.CallToolResponse,
+            McpJsonUtilities.DefaultOptions,
             cancellationToken: cancellationToken);
 
         static async Task<CallToolResponse> SendRequestWithProgressAsync(
@@ -855,7 +840,7 @@ public static class McpClientExtensions
             await using var _ = client.RegisterNotificationHandler(NotificationMethods.ProgressNotification,
                 (notification, cancellationToken) =>
                 {
-                    if (JsonSerializer.Deserialize(notification.Params, McpJsonUtilities.JsonContext.Default.ProgressNotification) is { } pn &&
+                    if (JsonSerializer.Deserialize(notification.Params, McpJsonUtilities.DefaultOptions.GetTypeInfo(typeof(object))) is ProgressNotification pn &&
                         pn.ProgressToken == progressToken)
                     {
                         progress.Report(pn.Progress);
@@ -864,7 +849,7 @@ public static class McpClientExtensions
                     return default;
                 }).ConfigureAwait(false);
 
-            return await client.SendRequestAsync(
+            return await client.SendRequestAsync<CallToolRequestParams, CallToolResponse>(
                 RequestMethods.ToolsCall,
                 new()
                 {
@@ -872,8 +857,7 @@ public static class McpClientExtensions
                     Arguments = ToArgumentsDictionary(arguments, serializerOptions),
                     Meta = new() { ProgressToken = progressToken },
                 },
-                McpJsonUtilities.JsonContext.Default.CallToolRequestParams,
-                McpJsonUtilities.JsonContext.Default.CallToolResponse,
+                McpJsonUtilities.DefaultOptions,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
         }
     }
@@ -1056,11 +1040,10 @@ public static class McpClientExtensions
     {
         Throw.IfNull(client);
 
-        return client.SendRequestAsync(
+        return client.SendRequestAsync<SetLevelRequestParams, EmptyResult>(
             RequestMethods.LoggingSetLevel,
             new() { Level = level },
-            McpJsonUtilities.JsonContext.Default.SetLevelRequestParams,
-            McpJsonUtilities.JsonContext.Default.EmptyResult,
+            McpJsonUtilities.DefaultOptions,
             cancellationToken: cancellationToken);
     }
 
@@ -1088,13 +1071,13 @@ public static class McpClientExtensions
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="client"/> is <see langword="null"/>.</exception>
     public static Task SetLoggingLevel(this IMcpClient client, LogLevel level, CancellationToken cancellationToken = default) =>
-        SetLoggingLevel(client, McpServer.ToLoggingLevel(level), cancellationToken);
+        SetLoggingLevel(client, ToLoggingLevel(level), cancellationToken);
 
     /// <summary>Convers a dictionary with <see cref="object"/> values to a dictionary with <see cref="JsonElement"/> values.</summary>
     private static IReadOnlyDictionary<string, JsonElement>? ToArgumentsDictionary(
         IReadOnlyDictionary<string, object?>? arguments, JsonSerializerOptions options)
     {
-        var typeInfo = options.GetTypeInfo<object?>();
+        var typeInfo = options.GetTypeInfo(typeof(object));
 
         Dictionary<string, JsonElement>? result = null;
         if (arguments is not null)
@@ -1108,4 +1091,17 @@ public static class McpClientExtensions
 
         return result;
     }
+
+    /// <summary>Maps a <see cref="LogLevel"/> to a <see cref="LoggingLevel"/>.</summary>
+    internal static LoggingLevel ToLoggingLevel(LogLevel level) =>
+        level switch
+        {
+            LogLevel.Trace => Protocol.Types.LoggingLevel.Debug,
+            LogLevel.Debug => Protocol.Types.LoggingLevel.Debug,
+            LogLevel.Information => Protocol.Types.LoggingLevel.Info,
+            LogLevel.Warning => Protocol.Types.LoggingLevel.Warning,
+            LogLevel.Error => Protocol.Types.LoggingLevel.Error,
+            LogLevel.Critical => Protocol.Types.LoggingLevel.Critical,
+            _ => Protocol.Types.LoggingLevel.Emergency,
+        };
 }

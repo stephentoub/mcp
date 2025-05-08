@@ -9,10 +9,6 @@ namespace ModelContextProtocol.Protocol.Types;
 /// </summary>
 /// <remarks>
 /// <para>
-/// For integration with AI client libraries, <see cref="GetPromptResult"/> can be converted to
-/// a collection of <see cref="ChatMessage"/> objects using the <see cref="AIContentExtensions.ToChatMessages"/> extension method.
-/// </para>
-/// <para>
 /// See the <see href="https://github.com/modelcontextprotocol/specification/blob/main/schema/">schema</see> for details.
 /// </para>
 /// </remarks>

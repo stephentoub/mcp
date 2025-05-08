@@ -82,7 +82,7 @@ internal sealed class McpServer : McpEndpoint, IMcpServer
                 _ = SendMessageAsync(new JsonRpcNotification() { Method = NotificationMethods.ToolListChangedNotification });
             };
 
-            tools.Changed += _toolsChangedDelegate;
+            //tools.Changed += _toolsChangedDelegate;
         }
 
         if (ServerOptions.Capabilities?.Prompts?.PromptCollection is { } prompts)
@@ -92,7 +92,7 @@ internal sealed class McpServer : McpEndpoint, IMcpServer
                 _ = SendMessageAsync(new JsonRpcNotification() { Method = NotificationMethods.PromptListChangedNotification });
             };
 
-            prompts.Changed += _promptsChangedDelegate;
+            //prompts.Changed += _promptsChangedDelegate;
         }
 
         // And initialize the session.
@@ -143,13 +143,13 @@ internal sealed class McpServer : McpEndpoint, IMcpServer
         if (_toolsChangedDelegate is not null &&
             ServerOptions.Capabilities?.Tools?.ToolCollection is { } tools)
         {
-            tools.Changed -= _toolsChangedDelegate;
+            //tools.Changed -= _toolsChangedDelegate;
         }
 
         if (_promptsChangedDelegate is not null &&
             ServerOptions.Capabilities?.Prompts?.PromptCollection is { } prompts)
         {
-            prompts.Changed -= _promptsChangedDelegate;
+            //prompts.Changed -= _promptsChangedDelegate;
         }
 
         await base.DisposeUnsynchronizedAsync().ConfigureAwait(false);
@@ -289,57 +289,57 @@ internal sealed class McpServer : McpEndpoint, IMcpServer
         }
 
         // Handle prompts provided via DI.
-        if (prompts is { IsEmpty: false })
-        {
-            // Synthesize the handlers, making sure a PromptsCapability is specified.
-            var originalListPromptsHandler = listPromptsHandler;
-            listPromptsHandler = async (request, cancellationToken) =>
-            {
-                ListPromptsResult result = originalListPromptsHandler is not null ?
-                    await originalListPromptsHandler(request, cancellationToken).ConfigureAwait(false) :
-                    new();
+        //if (prompts is { IsEmpty: false })
+        //{
+        //    // Synthesize the handlers, making sure a PromptsCapability is specified.
+        //    var originalListPromptsHandler = listPromptsHandler;
+        //    listPromptsHandler = async (request, cancellationToken) =>
+        //    {
+        //        ListPromptsResult result = originalListPromptsHandler is not null ?
+        //            await originalListPromptsHandler(request, cancellationToken).ConfigureAwait(false) :
+        //            new();
 
-                if (request.Params?.Cursor is null)
-                {
-                    result.Prompts.AddRange(prompts.Select(t => t.ProtocolPrompt));
-                }
+        //        if (request.Params?.Cursor is null)
+        //        {
+        //            result.Prompts.AddRange(prompts.Select(t => t.ProtocolPrompt));
+        //        }
 
-                return result;
-            };
+        //        return result;
+        //    };
 
-            var originalGetPromptHandler = getPromptHandler;
-            getPromptHandler = (request, cancellationToken) =>
-            {
-                if (request.Params is null ||
-                    !prompts.TryGetPrimitive(request.Params.Name, out var prompt))
-                {
-                    if (originalGetPromptHandler is not null)
-                    {
-                        return originalGetPromptHandler(request, cancellationToken);
-                    }
+        //    var originalGetPromptHandler = getPromptHandler;
+        //    getPromptHandler = (request, cancellationToken) =>
+        //    {
+        //        if (request.Params is null ||
+        //            !prompts.TryGetPrimitive(request.Params.Name, out var prompt))
+        //        {
+        //            if (originalGetPromptHandler is not null)
+        //            {
+        //                return originalGetPromptHandler(request, cancellationToken);
+        //            }
 
-                    throw new McpException($"Unknown prompt: '{request.Params?.Name}'", McpErrorCode.InvalidParams);
-                }
+        //            throw new McpException($"Unknown prompt: '{request.Params?.Name}'", McpErrorCode.InvalidParams);
+        //        }
 
-                return prompt.GetAsync(request, cancellationToken);
-            };
+        //        return prompt.GetAsync(request, cancellationToken);
+        //    };
 
-            ServerCapabilities = new()
-            {
-                Experimental = options.Capabilities?.Experimental,
-                Logging = options.Capabilities?.Logging,
-                Tools = options.Capabilities?.Tools,
-                Resources = options.Capabilities?.Resources,
-                Prompts = new()
-                {
-                    ListPromptsHandler = listPromptsHandler,
-                    GetPromptHandler = getPromptHandler,
-                    PromptCollection = prompts,
-                    ListChanged = true,
-                }
-            };
-        }
-        else
+        //    ServerCapabilities = new()
+        //    {
+        //        Experimental = options.Capabilities?.Experimental,
+        //        Logging = options.Capabilities?.Logging,
+        //        Tools = options.Capabilities?.Tools,
+        //        Resources = options.Capabilities?.Resources,
+        //        Prompts = new()
+        //        {
+        //            ListPromptsHandler = listPromptsHandler,
+        //            GetPromptHandler = getPromptHandler,
+        //            PromptCollection = prompts,
+        //            ListChanged = true,
+        //        }
+        //    };
+        //}
+        //else
         {
             ServerCapabilities = options.Capabilities;
 
@@ -387,57 +387,57 @@ internal sealed class McpServer : McpEndpoint, IMcpServer
         }
 
         // Handle tools provided via DI.
-        if (tools is { IsEmpty: false })
-        {
-            // Synthesize the handlers, making sure a ToolsCapability is specified.
-            var originalListToolsHandler = listToolsHandler;
-            listToolsHandler = async (request, cancellationToken) =>
-            {
-                ListToolsResult result = originalListToolsHandler is not null ?
-                    await originalListToolsHandler(request, cancellationToken).ConfigureAwait(false) :
-                    new();
+        //if (tools is { IsEmpty: false })
+        //{
+        //    // Synthesize the handlers, making sure a ToolsCapability is specified.
+        //    var originalListToolsHandler = listToolsHandler;
+        //    listToolsHandler = async (request, cancellationToken) =>
+        //    {
+        //        ListToolsResult result = originalListToolsHandler is not null ?
+        //            await originalListToolsHandler(request, cancellationToken).ConfigureAwait(false) :
+        //            new();
 
-                if (request.Params?.Cursor is null)
-                {
-                    result.Tools.AddRange(tools.Select(t => t.ProtocolTool));
-                }
+        //        if (request.Params?.Cursor is null)
+        //        {
+        //            result.Tools.AddRange(tools.Select(t => t.ProtocolTool));
+        //        }
 
-                return result;
-            };
+        //        return result;
+        //    };
 
-            var originalCallToolHandler = callToolHandler;
-            callToolHandler = (request, cancellationToken) =>
-            {
-                if (request.Params is null ||
-                    !tools.TryGetPrimitive(request.Params.Name, out var tool))
-                {
-                    if (originalCallToolHandler is not null)
-                    {
-                        return originalCallToolHandler(request, cancellationToken);
-                    }
+        //    var originalCallToolHandler = callToolHandler;
+        //    callToolHandler = (request, cancellationToken) =>
+        //    {
+        //        if (request.Params is null ||
+        //            !tools.TryGetPrimitive(request.Params.Name, out var tool))
+        //        {
+        //            if (originalCallToolHandler is not null)
+        //            {
+        //                return originalCallToolHandler(request, cancellationToken);
+        //            }
 
-                    throw new McpException($"Unknown tool: '{request.Params?.Name}'", McpErrorCode.InvalidParams);
-                }
+        //            throw new McpException($"Unknown tool: '{request.Params?.Name}'", McpErrorCode.InvalidParams);
+        //        }
 
-                return tool.InvokeAsync(request, cancellationToken);
-            };
+        //        return tool.InvokeAsync(request, cancellationToken);
+        //    };
 
-            ServerCapabilities = new()
-            {
-                Experimental = options.Capabilities?.Experimental,
-                Logging = options.Capabilities?.Logging,
-                Prompts = options.Capabilities?.Prompts,
-                Resources = options.Capabilities?.Resources,
-                Tools = new()
-                {
-                    ListToolsHandler = listToolsHandler,
-                    CallToolHandler = callToolHandler,
-                    ToolCollection = tools,
-                    ListChanged = true,
-                }
-            };
-        }
-        else
+        //    ServerCapabilities = new()
+        //    {
+        //        Experimental = options.Capabilities?.Experimental,
+        //        Logging = options.Capabilities?.Logging,
+        //        Prompts = options.Capabilities?.Prompts,
+        //        Resources = options.Capabilities?.Resources,
+        //        Tools = new()
+        //        {
+        //            ListToolsHandler = listToolsHandler,
+        //            CallToolHandler = callToolHandler,
+        //            ToolCollection = tools,
+        //            ListChanged = true,
+        //        }
+        //    };
+        //}
+        //else
         {
             ServerCapabilities = options.Capabilities;
 

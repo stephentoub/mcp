@@ -60,5 +60,5 @@ public class ToolsCapability
     /// will be invoked as a fallback.
     /// </remarks>
     [JsonIgnore]
-    public McpServerPrimitiveCollection<McpServerTool>? ToolCollection { get; set; }
+    public object? ToolCollection { get; set; } // McpServerPrimitiveCollection<McpServerTool>
 }

@@ -17,12 +17,6 @@ namespace ModelContextProtocol.Protocol.Types;
 /// It serves as a core data structure in the MCP message exchange flow, particularly in prompt formation and model responses.
 /// </para>
 /// <para>
-/// <see cref="PromptMessage"/> objects are typically used in collections within <see cref="GetPromptResult"/> 
-/// to represent complete conversations or prompt sequences. They can be converted to and from <see cref="ChatMessage"/>
-/// objects using the extension methods <see cref="AIContentExtensions.ToChatMessage(PromptMessage)"/> and
-/// <see cref="AIContentExtensions.ToPromptMessages(ChatMessage)"/>.
-/// </para>
-/// <para>
 /// See the <see href="https://github.com/modelcontextprotocol/specification/blob/main/schema/">schema</see> for details.
 /// </para>
 /// </remarks>

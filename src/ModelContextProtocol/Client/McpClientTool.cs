@@ -87,7 +87,7 @@ public sealed class McpClientTool : AIFunction
         AIFunctionArguments arguments, CancellationToken cancellationToken)
     {
         CallToolResponse result = await CallAsync(arguments, _progress, JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
-        return JsonSerializer.SerializeToElement(result, McpJsonUtilities.JsonContext.Default.CallToolResponse);
+        return JsonSerializer.SerializeToElement(result, McpJsonUtilities.DefaultOptions.GetTypeInfo(typeof(CallToolResponse)));
     }
 
     /// <summary>

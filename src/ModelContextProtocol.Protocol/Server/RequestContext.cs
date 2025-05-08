@@ -7,11 +7,6 @@ namespace ModelContextProtocol.Server;
 /// Provides a context container that provides access to the client request parameters and resources for the request.
 /// </summary>
 /// <typeparam name="TParams">Type of the request parameters specific to each MCP operation.</typeparam>
-/// <remarks>
-/// The <see cref="RequestContext{TParams}"/> encapsulates all contextual information for handling an MCP request.
-/// This type is typically received as a parameter in handler delegates registered with <see cref="IMcpServerBuilder"/>,
-/// and may be injected as parameters into <see cref="McpServerTool"/>s.
-/// </remarks>
 public sealed class RequestContext<TParams>
 {
     /// <summary>The server with which this instance is associated.</summary>

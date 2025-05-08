@@ -79,5 +79,5 @@ public class PromptsCapability
     /// </para>
     /// </remarks>
     [JsonIgnore]
-    public McpServerPrimitiveCollection<McpServerPrompt>? PromptCollection { get; set; }
+    public object? PromptCollection { get; set; } // McpServerPrimitiveCollection<McpServerPrompt>
 }

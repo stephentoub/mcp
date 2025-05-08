@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol.Messages;
 using ModelContextProtocol.Protocol.Types;
 using ModelContextProtocol.Utils;
@@ -39,11 +40,10 @@ public static class McpServerExtensions
             throw new InvalidOperationException("Client does not support sampling.");
         }
 
-        return server.SendRequestAsync(
+        return server.SendRequestAsync<CreateMessageRequestParams, CreateMessageResult>(
             RequestMethods.SamplingCreateMessage,
             request,
-            McpJsonUtilities.JsonContext.Default.CreateMessageRequestParams,
-            McpJsonUtilities.JsonContext.Default.CreateMessageResult,
+            McpJsonUtilities.DefaultOptions,
             cancellationToken: cancellationToken);
     }
 
@@ -207,11 +207,10 @@ public static class McpServerExtensions
             throw new InvalidOperationException("Client does not support roots.");
         }
 
-        return server.SendRequestAsync(
+        return server.SendRequestAsync<ListRootsRequestParams, ListRootsResult>(
             RequestMethods.RootsList,
             request,
-            McpJsonUtilities.JsonContext.Default.ListRootsRequestParams,
-            McpJsonUtilities.JsonContext.Default.ListRootsResult,
+            McpJsonUtilities.DefaultOptions,
             cancellationToken: cancellationToken);
     }
 
@@ -275,7 +274,7 @@ public static class McpServerExtensions
             /// <inheritdoc />
             public bool IsEnabled(LogLevel logLevel) =>
                 server?.LoggingLevel is { } loggingLevel &&
-                McpServer.ToLoggingLevel(logLevel) >= loggingLevel;
+                McpClientExtensions.ToLoggingLevel(logLevel) >= loggingLevel;
 
             /// <inheritdoc />
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
@@ -293,8 +292,8 @@ public static class McpServerExtensions
                 {
                     _ = server.SendNotificationAsync(NotificationMethods.LoggingMessageNotification, new LoggingMessageNotificationParams()
                     {
-                        Level = McpServer.ToLoggingLevel(logLevel),
-                        Data = JsonSerializer.SerializeToElement(message, McpJsonUtilities.JsonContext.Default.String),
+                        Level = McpClientExtensions.ToLoggingLevel(logLevel),
+                        Data = JsonSerializer.SerializeToElement(message, McpJsonUtilities.DefaultOptions.GetTypeInfo(typeof(string))),
                         Logger = categoryName,
                     });
                 }

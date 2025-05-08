@@ -15,11 +15,6 @@ namespace ModelContextProtocol.Server;
 /// the behavior of the MCP server by providing implementations for the various protocol operations.
 /// </para>
 /// <para>
-/// Handlers can be configured individually using the extension methods in <see cref="McpServerBuilderExtensions"/>
-/// such as <see cref="McpServerBuilderExtensions.WithListToolsHandler"/> and
-/// <see cref="McpServerBuilderExtensions.WithCallToolHandler"/>.
-/// </para>
-/// <para>
 /// When a client sends a request to the server, the appropriate handler is invoked to process the
 /// request and produce a response according to the protocol specification. Which handler is selected
 /// is done based on an ordinal, case-sensitive string comparison.
@@ -30,26 +25,11 @@ public sealed class McpServerHandlers
     /// <summary>
     /// Gets or sets the handler for <see cref="RequestMethods.ToolsList"/> requests.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// The handler should return a list of available tools when requested by a client.
-    /// It supports pagination through the cursor mechanism, where the client can make
-    /// repeated calls with the cursor returned by the previous call to retrieve more tools.
-    /// </para>
-    /// <para>
-    /// This handler works alongside any tools defined in the <see cref="McpServerTool"/> collection.
-    /// Tools from both sources will be combined when returning results to clients.
-    /// </para>
-    /// </remarks>
     public Func<RequestContext<ListToolsRequestParams>, CancellationToken, ValueTask<ListToolsResult>>? ListToolsHandler { get; set; }
 
     /// <summary>
     /// Gets or sets the handler for <see cref="RequestMethods.ToolsCall"/> requests.
     /// </summary>
-    /// <remarks>
-    /// This handler is invoked when a client makes a call to a tool that isn't found in the <see cref="McpServerTool"/> collection.
-    /// The handler should implement logic to execute the requested tool and return appropriate results.
-    /// </remarks>
     public Func<RequestContext<CallToolRequestParams>, CancellationToken, ValueTask<CallToolResponse>>? CallToolHandler { get; set; }
 
     /// <summary>
@@ -61,20 +41,12 @@ public sealed class McpServerHandlers
     /// It supports pagination through the cursor mechanism, where the client can make
     /// repeated calls with the cursor returned by the previous call to retrieve more prompts.
     /// </para>
-    /// <para>
-    /// This handler works alongside any prompts defined in the <see cref="McpServerPrompt"/> collection.
-    /// Prompts from both sources will be combined when returning results to clients.
-    /// </para>
     /// </remarks>
     public Func<RequestContext<ListPromptsRequestParams>, CancellationToken, ValueTask<ListPromptsResult>>? ListPromptsHandler { get; set; }
 
     /// <summary>
     /// Gets or sets the handler for <see cref="RequestMethods.PromptsGet"/> requests.
     /// </summary>
-    /// <remarks>
-    /// This handler is invoked when a client requests details for a specific prompt that isn't found in the <see cref="McpServerPrompt"/> collection.
-    /// The handler should implement logic to fetch or generate the requested prompt and return appropriate results.
-    /// </remarks>
     public Func<RequestContext<GetPromptRequestParams>, CancellationToken, ValueTask<GetPromptResult>>? GetPromptHandler { get; set; }
 
     /// <summary>
@@ -168,7 +140,7 @@ public sealed class McpServerHandlers
     /// </summary>
     /// <param name="options"></param>
     /// <returns></returns>
-    internal void OverwriteWithSetHandlers(McpServerOptions options)
+    public void OverwriteWithSetHandlers(McpServerOptions options)
     {
         PromptsCapability? promptsCapability = options.Capabilities?.Prompts;
         if (ListPromptsHandler is not null || GetPromptHandler is not null)

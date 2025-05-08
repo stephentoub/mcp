@@ -28,7 +28,7 @@ internal sealed class McpServerOptionsSetup(
         // a collection, add to it, otherwise create a new one. We want to maintain the identity
         // of an existing collection in case someone has provided their own derived type, wants
         // change notifications, etc.
-        McpServerPrimitiveCollection<McpServerTool> toolCollection = options.Capabilities?.Tools?.ToolCollection ?? [];
+        McpServerPrimitiveCollection<McpServerTool> toolCollection = (McpServerPrimitiveCollection<McpServerTool>?)options.Capabilities?.Tools?.ToolCollection ?? [];
         foreach (var tool in serverTools)
         {
             toolCollection.TryAdd(tool);
@@ -45,7 +45,7 @@ internal sealed class McpServerOptionsSetup(
         // a collection, add to it, otherwise create a new one. We want to maintain the identity
         // of an existing collection in case someone has provided their own derived type, wants
         // change notifications, etc.
-        McpServerPrimitiveCollection<McpServerPrompt> promptCollection = options.Capabilities?.Prompts?.PromptCollection ?? [];
+        McpServerPrimitiveCollection<McpServerPrompt> promptCollection = (McpServerPrimitiveCollection<McpServerPrompt>?)options.Capabilities?.Prompts?.PromptCollection ?? [];
         foreach (var prompt in serverPrompts)
         {
             promptCollection.TryAdd(prompt);

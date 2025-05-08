@@ -34,10 +34,6 @@ public class SamplingCapability
     /// cancellation token. It should return a <see cref="CreateMessageResult"/> containing the 
     /// generated content.
     /// </para>
-    /// <para>
-    /// You can create a handler using the <see cref="McpClientExtensions.CreateSamplingHandler"/> extension
-    /// method with any implementation of <see cref="IChatClient"/>.
-    /// </para>
     /// </remarks>
     [JsonIgnore]
     public Func<CreateMessageRequestParams?, IProgress<ProgressNotificationValue>, CancellationToken, ValueTask<CreateMessageResult>>? SamplingHandler { get; set; }
