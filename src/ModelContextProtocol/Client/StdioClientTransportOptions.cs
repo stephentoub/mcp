@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace ModelContextProtocol.Client;
 
 /// <summary>
@@ -69,4 +71,7 @@ public record StdioClientTransportOptions
     /// </para>
     /// </remarks>
     public TimeSpan ShutdownTimeout { get; set; } = TimeSpan.FromSeconds(5);
+
+    /// <summary>Gets or sets a delegate that will be invoked when the server process exits unexpectedly.</summary>
+    public Action<StdioClientTransportServerCompleted>? ServerProcessExitedUnexpectedly { get; set; }
 }

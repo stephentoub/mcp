@@ -10,7 +10,8 @@ internal sealed class StdioClientSessionTransport : StreamClientSessionTransport
     private readonly StdioClientTransportOptions _options;
     private readonly Process _process;
     private readonly Queue<string> _stderrRollingLog;
-    private int _cleanedUp = 0;
+    private int _cleanedUp;
+    private int _raisedUnexpectedExitEvent;
 
     public StdioClientSessionTransport(StdioClientTransportOptions options, Process process, string endpointName, Queue<string> stderrRollingLog, ILoggerFactory? loggerFactory)
         : base(process.StandardInput, process.StandardOutput, endpointName, loggerFactory)
@@ -75,6 +76,7 @@ internal sealed class StdioClientSessionTransport : StreamClientSessionTransport
         }
 
         Debug.Assert(StdioClientTransport.HasExited(_process));
+        int? exitCode = null;
         try
         {
             // The process has exited, but we still need to ensure stderr has been flushed.
@@ -83,29 +85,49 @@ internal sealed class StdioClientSessionTransport : StreamClientSessionTransport
 #else
             _process.WaitForExit();
 #endif
+            exitCode = _process.ExitCode;
         }
         catch { }
 
-        string errorMessage = "MCP server process exited unexpectedly";
+        string? stdErrLog = GetStdErrLog();
+        RaiseUnexpectedCallback(exitCode, stdErrLog);
 
-        string? exitCode = null;
-        try
+        string errorMessage = $"MCP server process exited unexpectedly{(exitCode is not null ? $" (exit code: {(uint?)exitCode})" : null)}.";
+
+        if (stdErrLog is not null)
         {
-            exitCode = $" (exit code: {(uint)_process.ExitCode})";
+            errorMessage =
+                $"{errorMessage}{Environment.NewLine}" +
+                $"Server's stderr tail:{Environment.NewLine}" +
+                $"{stdErrLog}";
         }
-        catch { }
 
+        return new IOException(errorMessage);
+    }
+
+    private string? GetStdErrLog()
+    {
         lock (_stderrRollingLog)
         {
             if (_stderrRollingLog.Count > 0)
             {
-                errorMessage =
-                    $"{errorMessage}{exitCode}{Environment.NewLine}" +
-                    $"Server's stderr tail:{Environment.NewLine}" +
-                    $"{string.Join(Environment.NewLine, _stderrRollingLog)}";
+                return string.Join(Environment.NewLine, _stderrRollingLog);
             }
         }
 
-        return new IOException(errorMessage);
+        return null;
+    }
+
+    private void RaiseUnexpectedCallback(int? processExitCode, string? stderrLog)
+    {
+        if (_options.ServerProcessExitedUnexpectedly is { } callback &&
+            Interlocked.Exchange(ref _raisedUnexpectedExitEvent, 1) == 0)
+        {
+            callback(new()
+            {
+                ProcessExitCode = processExitCode,
+                StandardErrorLog = stderrLog,
+            });
+        }
     }
 }
