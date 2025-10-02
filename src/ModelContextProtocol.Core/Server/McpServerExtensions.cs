@@ -24,7 +24,7 @@ public static class McpServerExtensions
     /// <exception cref="InvalidOperationException">The client does not support sampling.</exception>
     /// <remarks>
     /// This method requires the client to support sampling capabilities.
-    /// It allows detailed control over sampling parameters including messages, system prompt, temperature, 
+    /// It allows detailed control over sampling parameters including messages, system prompt, temperature,
     /// and token limits.
     /// </remarks>
     [Obsolete($"Use {nameof(McpServer)}.{nameof(McpServer.SampleAsync)} instead. This member will be removed in a subsequent release.")] // See: https://github.com/modelcontextprotocol/csharp-sdk/issues/774
