@@ -201,7 +201,7 @@ public partial class McpServerBuilderExtensionsResourcesTests : ClientServerTest
     }
 
     [Fact]
-    public async Task TitleAttributeProperty_PropagatedToTitle()
+    public async Task AttributeProperties_Propagated()
     {
         await using McpClient client = await CreateMcpClientForServer();
 
@@ -211,11 +211,23 @@ public partial class McpServerBuilderExtensionsResourcesTests : ClientServerTest
         McpClientResource resource = resources.First(t => t.Name == "some_neat_direct_resource");
         Assert.Equal("This is a title", resource.Title);
 
+        Assert.NotNull(resource.ProtocolResource.Icons);
+        Assert.NotEmpty(resource.ProtocolResource.Icons);
+        var resourceIcon = Assert.Single(resource.ProtocolResource.Icons);
+        Assert.Equal("https://example.com/direct-resource-icon.svg", resourceIcon.Source);
+        Assert.Null(resourceIcon.Theme);
+
         var resourceTemplates = await client.ListResourceTemplatesAsync(cancellationToken: TestContext.Current.CancellationToken);
         Assert.NotNull(resourceTemplates);
         Assert.NotEmpty(resourceTemplates);
         McpClientResourceTemplate resourceTemplate = resourceTemplates.First(t => t.Name == "some_neat_templated_resource");
         Assert.Equal("This is another title", resourceTemplate.Title);
+
+        Assert.NotNull(resourceTemplate.ProtocolResourceTemplate.Icons);
+        Assert.NotEmpty(resourceTemplate.ProtocolResourceTemplate.Icons);
+        var templateIcon = Assert.Single(resourceTemplate.ProtocolResourceTemplate.Icons);
+        Assert.Equal("https://example.com/templated-resource-icon.svg", templateIcon.Source);
+        Assert.Null(templateIcon.Theme);
     }
 
     [Fact]
@@ -341,10 +353,10 @@ public partial class McpServerBuilderExtensionsResourcesTests : ClientServerTest
     [McpServerResourceType]
     public sealed class SimpleResources
     {
-        [McpServerResource(Title = "This is a title"), Description("Some neat direct resource")]
+        [McpServerResource(Title = "This is a title", IconSource = "https://example.com/direct-resource-icon.svg"), Description("Some neat direct resource")]
         public static string SomeNeatDirectResource() => "This is a neat resource";
 
-        [McpServerResource(Title = "This is another title"), Description("Some neat resource with parameters")]
+        [McpServerResource(Title = "This is another title", IconSource = "https://example.com/templated-resource-icon.svg"), Description("Some neat resource with parameters")]
         public static string SomeNeatTemplatedResource(string name) => $"This is a neat resource with parameters: {name}";
 
         [McpServerResource]

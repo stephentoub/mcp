@@ -492,4 +492,59 @@ public class McpServerPromptTests
             return _message;
         }
     }
+
+    [Fact]
+    public void SupportsIconsInCreateOptions()
+    {
+        var icons = new List<Icon>
+        {
+            new() { Source = "https://example.com/prompt-icon.png", MimeType = "image/png", Sizes = new List<string> { "48x48" } }
+        };
+
+        McpServerPrompt prompt = McpServerPrompt.Create(() => "test prompt", new McpServerPromptCreateOptions
+        {
+            Icons = icons
+        });
+
+        var icon = Assert.Single(prompt.ProtocolPrompt.Icons!);
+        Assert.Equal("https://example.com/prompt-icon.png", icon.Source);
+        Assert.Equal("image/png", icon.MimeType);
+    }
+
+    [Fact]
+    public void SupportsIconSourceInAttribute()
+    {
+        McpServerPrompt prompt = McpServerPrompt.Create([McpServerPrompt(IconSource = "https://example.com/prompt-icon.svg")] () => "test prompt");
+
+        var icon = Assert.Single(prompt.ProtocolPrompt.Icons!);
+        Assert.Equal("https://example.com/prompt-icon.svg", icon.Source);
+        Assert.Null(icon.MimeType);
+        Assert.Null(icon.Sizes);
+    }
+
+    [Fact]
+    public void CreateOptionsIconsOverrideAttributeIconSource_Prompt()
+    {
+        var optionsIcons = new List<Icon>
+        {
+            new() { Source = "https://example.com/override-icon.svg", MimeType = "image/svg+xml" }
+        };
+
+        McpServerPrompt prompt = McpServerPrompt.Create([McpServerPrompt(IconSource = "https://example.com/prompt-icon.png")] () => "test prompt", new McpServerPromptCreateOptions
+        {
+            Icons = optionsIcons
+        });
+
+        var icon = Assert.Single(prompt.ProtocolPrompt.Icons!);
+        Assert.Equal("https://example.com/override-icon.svg", icon.Source);
+        Assert.Equal("image/svg+xml", icon.MimeType);
+    }
+
+    [Fact]
+    public void SupportsPromptWithoutIcons()
+    {
+        McpServerPrompt prompt = McpServerPrompt.Create([McpServerPrompt] () => "test prompt");
+
+        Assert.Null(prompt.ProtocolPrompt.Icons);
+    }
 }

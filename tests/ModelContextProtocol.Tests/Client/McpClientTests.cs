@@ -27,6 +27,46 @@ public class McpClientTests : ClientServerTestBase
         }
         mcpServerBuilder.WithTools([McpServerTool.Create([McpServerTool(Destructive = false, OpenWorld = true)] (string i) => $"{i} Result", new() { Name = "ValuesSetViaAttr" })]);
         mcpServerBuilder.WithTools([McpServerTool.Create([McpServerTool(Destructive = false, OpenWorld = true)] (string i) => $"{i} Result", new() { Name = "ValuesSetViaOptions", Destructive = true, OpenWorld = false, ReadOnly = true })]);
+
+        services.Configure<McpServerOptions>(o =>
+        {
+            o.ServerInfo = new Implementation
+            {
+                Name = "test-server",
+                Version = "1.0.0",
+                WebsiteUrl = "https://example.com",
+                Icons =
+                [
+                    new Icon { Source = "https://example.com/icon-48.png", MimeType = "image/png", Sizes = ["48x48"], Theme = "light" },
+                    new Icon { Source = "https://example.com/icon.svg", MimeType = "image/svg+xml", Sizes = ["any"], Theme = "dark" }
+                ]
+            };
+        });
+    }
+
+    [Fact]
+    public async Task CanReadServerInfo()
+    {
+        await using McpClient client = await CreateMcpClientForServer();
+
+        var serverInfo = client.ServerInfo;
+        Assert.Equal("test-server", serverInfo.Name);
+        Assert.Equal("1.0.0", serverInfo.Version);
+        Assert.Equal("https://example.com", serverInfo.WebsiteUrl);
+        Assert.NotNull(serverInfo.Icons);
+        Assert.Equal(2, serverInfo.Icons.Count);
+
+        var icon0 = serverInfo.Icons[0];
+        Assert.Equal("https://example.com/icon-48.png", icon0.Source);
+        Assert.Equal("image/png", icon0.MimeType);
+        Assert.Single(icon0.Sizes!, "48x48");
+        Assert.Equal("light", icon0.Theme);
+
+        var icon1 = serverInfo.Icons[1];
+        Assert.Equal("https://example.com/icon.svg", icon1.Source);
+        Assert.Equal("image/svg+xml", icon1.MimeType);
+        Assert.Single(icon1.Sizes!, "any");
+        Assert.Equal("dark", icon1.Theme);
     }
 
     [Theory]

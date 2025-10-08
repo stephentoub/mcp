@@ -677,6 +677,62 @@ public partial class McpServerResourceTests
         public static object StaticMethod() => "42";
     }
 
+    [Fact]
+    public void SupportsIconsInResourceCreateOptions()
+    {
+        var icons = new List<Icon>
+        {
+            new() { Source = "https://example.com/resource-icon.png", MimeType = "image/png", Sizes = new List<string> { "32x32" } }
+        };
+
+        McpServerResource resource = McpServerResource.Create(() => "test content", new McpServerResourceCreateOptions
+        {
+            UriTemplate = "test://resource/with-icon",
+            Icons = icons
+        });
+
+        var icon = Assert.Single(resource.ProtocolResourceTemplate.Icons!);
+        Assert.Equal("https://example.com/resource-icon.png", icon.Source);
+        Assert.Equal("image/png", icon.MimeType);
+    }
+
+    [Fact]
+    public void SupportsIconSourceInResourceAttribute()
+    {
+        McpServerResource resource = McpServerResource.Create([McpServerResource(UriTemplate = "test://resource", IconSource = "https://example.com/resource-icon.svg")] () => "test content");
+
+        var icon = Assert.Single(resource.ProtocolResourceTemplate.Icons!);
+        Assert.Equal("https://example.com/resource-icon.svg", icon.Source);
+        Assert.Null(icon.MimeType);
+        Assert.Null(icon.Sizes);
+    }
+
+    [Fact]
+    public void CreateOptionsIconsOverrideAttributeIconSource_Resource()
+    {
+        var optionsIcons = new List<Icon>
+        {
+            new() { Source = "https://example.com/override-icon.svg", MimeType = "image/svg+xml" }
+        };
+
+        McpServerResource resource = McpServerResource.Create([McpServerResource(UriTemplate = "test://resource", IconSource = "https://example.com/resource-icon.png")] () => "test content", new McpServerResourceCreateOptions
+        {
+            Icons = optionsIcons
+        });
+
+        var icon = Assert.Single(resource.ProtocolResourceTemplate.Icons!);
+        Assert.Equal("https://example.com/override-icon.svg", icon.Source);
+        Assert.Equal("image/svg+xml", icon.MimeType);
+    }
+
+    [Fact]
+    public void SupportsResourceWithoutIcons()
+    {
+        McpServerResource resource = McpServerResource.Create([McpServerResource(UriTemplate = "test://resource")] () => "test content");
+
+        Assert.Null(resource.ProtocolResourceTemplate.Icons);
+    }
+
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
     [JsonSerializable(typeof(DisposableResourceType))]
     [JsonSerializable(typeof(List<AIContent>))]

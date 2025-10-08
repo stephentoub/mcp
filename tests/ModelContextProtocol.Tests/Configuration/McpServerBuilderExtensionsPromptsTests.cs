@@ -166,7 +166,7 @@ public partial class McpServerBuilderExtensionsPromptsTests : ClientServerTestBa
     }
 
     [Fact]
-    public async Task TitleAttributeProperty_PropagatedToTitle()
+    public async Task AttributeProperties_Propagated()
     {
         await using McpClient client = await CreateMcpClientForServer();
 
@@ -177,6 +177,12 @@ public partial class McpServerBuilderExtensionsPromptsTests : ClientServerTestBa
         McpClientPrompt prompt = prompts.First(t => t.Name == "returns_string");
 
         Assert.Equal("This is a title", prompt.Title);
+
+        Assert.NotNull(prompt.ProtocolPrompt.Icons);
+        Assert.NotEmpty(prompt.ProtocolPrompt.Icons);
+        var icon = Assert.Single(prompt.ProtocolPrompt.Icons);
+        Assert.Equal("https://example.com/prompt-icon.svg", icon.Source);
+        Assert.Null(icon.Theme);
     }
 
     [Fact]
@@ -325,12 +331,11 @@ public partial class McpServerBuilderExtensionsPromptsTests : ClientServerTestBa
                 new(ChatRole.User, "Summarize."),
             ];
 
-
         [McpServerPrompt, Description("Returns chat messages")]
         public static ChatMessage[] ThrowsException([Description("The first parameter")] string message) =>
             throw new FormatException("uh oh");
 
-        [McpServerPrompt(Title = "This is a title"), Description("Returns chat messages")]
+        [McpServerPrompt(Title = "This is a title", IconSource = "https://example.com/prompt-icon.svg"), Description("Returns chat messages")]
         public string ReturnsString([Description("The first parameter")] string message) =>
             $"The prompt is: {message}. The id is {id}.";
     }
