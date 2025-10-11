@@ -13,7 +13,11 @@ public sealed class KestrelInMemoryTransport : IConnectionListenerFactory
     public KestrelInMemoryConnection CreateConnection(EndPoint endpoint)
     {
         var connection = new KestrelInMemoryConnection();
-        GetAcceptQueue(endpoint).Writer.TryWrite(connection);
+        if (!GetAcceptQueue(endpoint).Writer.TryWrite(connection))
+        {
+            throw new IOException("The KestrelInMemoryTransport has been shut down.");
+        };
+
         return connection;
     }
 
@@ -37,12 +41,9 @@ public sealed class KestrelInMemoryTransport : IConnectionListenerFactory
 
         public async ValueTask<ConnectionContext?> AcceptAsync(CancellationToken cancellationToken = default)
         {
-            if (await acceptQueue.Reader.WaitToReadAsync(cancellationToken))
+            await foreach (var item in acceptQueue.Reader.ReadAllAsync(cancellationToken))
             {
-                while (acceptQueue.Reader.TryRead(out var item))
-                {
-                    return item;
-                }
+                return item;
             }
 
             return null;
