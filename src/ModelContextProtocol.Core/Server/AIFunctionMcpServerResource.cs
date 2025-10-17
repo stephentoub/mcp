@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace ModelContextProtocol.Server;
@@ -219,6 +220,9 @@ internal sealed class AIFunctionMcpServerResource : McpServerResource
             Description = options?.Description,
             MimeType = options?.MimeType ?? "application/octet-stream",
             Icons = options?.Icons,
+            Meta = function.UnderlyingMethod is not null ?
+                AIFunctionMcpServerTool.CreateMetaFromAttributes(function.UnderlyingMethod, options?.Meta, options?.SerializerOptions) :
+                options?.Meta,
         };
 
         return new AIFunctionMcpServerResource(function, resource, options?.Metadata ?? []);
