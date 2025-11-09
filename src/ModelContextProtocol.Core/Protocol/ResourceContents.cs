@@ -116,6 +116,7 @@ public abstract class ResourceContents
                         break;
 
                     default:
+                        reader.Skip();
                         break;
                 }
             }

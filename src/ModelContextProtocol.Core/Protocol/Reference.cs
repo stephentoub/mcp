@@ -81,11 +81,16 @@ public abstract class Reference
                         name = reader.GetString();
                         break;
 
+                    case "title":
+                        title = reader.GetString();
+                        break;
+
                     case "uri":
                         uri = reader.GetString();
                         break;
 
                     default:
+                        reader.Skip();
                         break;
                 }
             }

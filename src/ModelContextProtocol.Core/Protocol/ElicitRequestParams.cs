@@ -188,6 +188,7 @@ public sealed class ElicitRequestParams
                             break;
 
                         default:
+                            reader.Skip();
                             break;
                     }
                 }

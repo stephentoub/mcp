@@ -141,6 +141,7 @@ public abstract class ContentBlock
                         break;
 
                     default:
+                        reader.Skip();
                         break;
                 }
             }
