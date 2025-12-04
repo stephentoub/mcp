@@ -310,7 +310,7 @@ public class McpClientTests : ClientServerTestBase
         JsonSerializerOptions emptyOptions = new() { TypeInfoResolver = JsonTypeInfoResolver.Combine() };
         await using McpClient client = await CreateMcpClientForServer();
 
-        await Assert.ThrowsAsync<NotSupportedException>(async () => await client.GetPromptAsync("Prompt", new Dictionary<string, object?> { ["i"] = 42 }, emptyOptions, cancellationToken: TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<NotSupportedException>(async () => await client.GetPromptAsync("Prompt", new Dictionary<string, object?> { ["i"] = 42 }, new RequestOptions { JsonSerializerOptions = emptyOptions }, cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -319,7 +319,7 @@ public class McpClientTests : ClientServerTestBase
         JsonSerializerOptions options = new(JsonSerializerOptions.Default);
         await using McpClient client = await CreateMcpClientForServer();
 
-        var tool = (await client.ListToolsAsync(options, TestContext.Current.CancellationToken)).First();
+        var tool = (await client.ListToolsAsync(new RequestOptions { JsonSerializerOptions = options }, TestContext.Current.CancellationToken)).First();
         var originalName = tool.Name;
         var renamedTool = tool.WithName("RenamedTool");
 
@@ -333,7 +333,7 @@ public class McpClientTests : ClientServerTestBase
     {
         JsonSerializerOptions options = new(JsonSerializerOptions.Default);
         await using McpClient client = await CreateMcpClientForServer();
-        var tool = (await client.ListToolsAsync(options, TestContext.Current.CancellationToken)).FirstOrDefault();
+        var tool = (await client.ListToolsAsync(new RequestOptions { JsonSerializerOptions = options }, TestContext.Current.CancellationToken)).FirstOrDefault();
         var originalDescription = tool?.Description;
         var redescribedTool = tool?.WithDescription("ToolWithNewDescription");
         Assert.NotNull(redescribedTool);
@@ -407,7 +407,7 @@ public class McpClientTests : ClientServerTestBase
         Assert.False(logger.IsEnabled(LogLevel.Error));
         Assert.False(logger.IsEnabled(LogLevel.Critical));
 
-        await client.SetLoggingLevel(LoggingLevel.Info, TestContext.Current.CancellationToken);
+        await client.SetLoggingLevel(LoggingLevel.Info, options: null, TestContext.Current.CancellationToken);
 
         DateTime start = DateTime.UtcNow;
         while (Server.LoggingLevel is null)
