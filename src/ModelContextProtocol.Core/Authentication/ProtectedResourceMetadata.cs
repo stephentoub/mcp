@@ -15,10 +15,12 @@ public sealed class ProtectedResourceMetadata
     /// The protected resource's resource identifier.
     /// </value>
     /// <remarks>
-    /// REQUIRED.
+    /// OPTIONAL. When omitted, the MCP authentication handler infers the resource URI from the incoming request only when serving
+    /// the default <c>/.well-known/oauth-protected-resource</c> endpoint. If a custom <c>ResourceMetadataUri</c> is configured,
+    /// <b>Resource</b> must be explicitly set. Automatic inference only works with the default endpoint pattern.
     /// </remarks>
     [JsonPropertyName("resource")]
-    public required Uri Resource { get; set; }
+    public Uri? Resource { get; set; }
 
     /// <summary>
     /// Gets or sets the list of authorization server URIs.
