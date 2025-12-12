@@ -355,8 +355,10 @@ internal sealed partial class McpSessionHandler : IAsyncDisposable
         }
 
         LogRequestHandlerCalled(EndpointName, request.Method);
+        long startingTimestamp = Stopwatch.GetTimestamp();
         JsonNode? result = await handler(request, cancellationToken).ConfigureAwait(false);
-        LogRequestHandlerCompleted(EndpointName, request.Method);
+        TimeSpan elapsed = GetElapsed(startingTimestamp);
+        LogRequestHandlerCompleted(EndpointName, request.Method, elapsed.TotalMilliseconds);
 
         await SendMessageAsync(new JsonRpcResponse
         {
@@ -882,8 +884,8 @@ internal sealed partial class McpSessionHandler : IAsyncDisposable
     [LoggerMessage(Level = LogLevel.Information, Message = "{EndpointName} method '{Method}' request handler called.")]
     private partial void LogRequestHandlerCalled(string endpointName, string method);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "{EndpointName} method '{Method}' request handler completed.")]
-    private partial void LogRequestHandlerCompleted(string endpointName, string method);
+    [LoggerMessage(Level = LogLevel.Information, Message = "{EndpointName} method '{Method}' request handler completed in {ElapsedMilliseconds}ms.")]
+    private partial void LogRequestHandlerCompleted(string endpointName, string method, double elapsedMilliseconds);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "{EndpointName} method '{Method}' request handler failed.")]
     private partial void LogRequestHandlerException(string endpointName, string method, Exception exception);
