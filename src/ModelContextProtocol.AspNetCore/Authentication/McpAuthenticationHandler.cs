@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
 using ModelContextProtocol.Authentication;
 using System.Text.Encodings.Web;
 
@@ -185,15 +186,9 @@ public partial class McpAuthenticationHandler : AuthenticationHandler<McpAuthent
         // Get the absolute URI for the resource metadata
         string rawPrmDocumentUri = GetAbsoluteResourceMetadataUri();
 
-        properties ??= new AuthenticationProperties();
-
-        // Store the resource_metadata in properties in case other handlers need it
-        properties.Items["resource_metadata"] = rawPrmDocumentUri;
-
         // Add the WWW-Authenticate header with Bearer scheme and resource metadata
-        string headerValue = $"Bearer realm=\"{Scheme.Name}\", resource_metadata=\"{rawPrmDocumentUri}\"";
-        Response.Headers.Append("WWW-Authenticate", headerValue);
-
+        string headerValue = $"Bearer resource_metadata=\"{rawPrmDocumentUri}\"";
+        Response.Headers.Append(HeaderNames.WWWAuthenticate, headerValue);
         return base.HandleChallengeAsync(properties);
     }
 
