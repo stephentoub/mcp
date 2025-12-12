@@ -4,11 +4,15 @@ using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace ModelContextProtocol.Tests.Server;
 
 public class McpServerRequestDurationLoggingTests : ClientServerTestBase
 {
+    private static readonly Regex DurationRegex = new(@"completed in (\d+(?:\.\d+)?)ms", RegexOptions.Compiled);
+
     public McpServerRequestDurationLoggingTests(ITestOutputHelper testOutputHelper)
         : base(testOutputHelper)
     {
@@ -45,13 +49,13 @@ public class McpServerRequestDurationLoggingTests : ClientServerTestBase
             }
 
             // Extract duration from log message (should be in format "...completed in XXXms.")
-            var match = System.Text.RegularExpressions.Regex.Match(log.Message, @"completed in (\d+(?:\.\d+)?)ms");
+            var match = DurationRegex.Match(log.Message);
             if (!match.Success)
             {
                 return false;
             }
 
-            double elapsedMs = double.Parse(match.Groups[1].Value);
+            double elapsedMs = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
 
             // Duration should be at least 50ms (the delay we introduced)
             // and less than 5 seconds
@@ -82,13 +86,13 @@ public class McpServerRequestDurationLoggingTests : ClientServerTestBase
             }
 
             // Extract duration from log message
-            var match = System.Text.RegularExpressions.Regex.Match(log.Message, @"completed in (\d+(?:\.\d+)?)ms");
+            var match = DurationRegex.Match(log.Message);
             if (!match.Success)
             {
                 return false;
             }
 
-            double elapsedMs = double.Parse(match.Groups[1].Value);
+            double elapsedMs = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
 
             // Even quick requests should log some duration (should be very small)
             // Should complete quickly (less than 1 second)
