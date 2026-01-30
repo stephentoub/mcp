@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using System.Diagnostics;
 using System.Net.ServerSentEvents;
@@ -10,7 +11,11 @@ namespace ModelContextProtocol.Server;
 /// Handles processing the request/response body pairs for the Streamable HTTP transport.
 /// This is typically used via <see cref="JsonRpcMessageContext.RelatedTransport"/>.
 /// </summary>
-internal sealed class StreamableHttpPostTransport(StreamableHttpServerTransport parentTransport, Stream responseStream, CancellationToken sessionCancellationToken) : ITransport
+internal sealed partial class StreamableHttpPostTransport(
+    StreamableHttpServerTransport parentTransport,
+    Stream responseStream,
+    CancellationToken sessionCancellationToken,
+    ILogger logger) : ITransport
 {
     private readonly SemaphoreSlim _messageLock = new(1, 1);
     private readonly TaskCompletionSource<bool> _httpResponseTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -199,7 +204,14 @@ internal sealed class StreamableHttpPostTransport(StreamableHttpServerTransport 
             {
                 using var _ = await _messageLock.LockAsync().ConfigureAwait(false);
 
-                await _storeSseWriter!.DisposeAsync().ConfigureAwait(false);
+                try
+                {
+                    await _storeSseWriter!.DisposeAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    LogStoreStreamDisposalFailed(ex);
+                }
             }
         }
     }
@@ -222,4 +234,7 @@ internal sealed class StreamableHttpPostTransport(StreamableHttpServerTransport 
         // Don't dispose the event stream writer here, as we may continue to write to the event store
         // after disposal if there are pending messages.
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to dispose SSE event stream writer.")]
+    private partial void LogStoreStreamDisposalFailed(Exception exception);
 }
