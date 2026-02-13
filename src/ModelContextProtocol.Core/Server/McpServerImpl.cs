@@ -392,7 +392,17 @@ internal sealed partial class McpServerImpl : McpServer
                     }
                 }
 
-                return await handler(request, cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    var result = await handler(request, cancellationToken).ConfigureAwait(false);
+                    ReadResourceCompleted(request.Params?.Uri ?? string.Empty);
+                    return result;
+                }
+                catch (Exception e)
+                {
+                    ReadResourceError(request.Params?.Uri ?? string.Empty, e);
+                    throw;
+                }
             });
         subscribeHandler = BuildFilterPipeline(subscribeHandler, options.Filters.SubscribeToResourcesFilters);
         unsubscribeHandler = BuildFilterPipeline(unsubscribeHandler, options.Filters.UnsubscribeFromResourcesFilters);
@@ -487,7 +497,7 @@ internal sealed partial class McpServerImpl : McpServer
 
         listPromptsHandler = BuildFilterPipeline(listPromptsHandler, options.Filters.ListPromptsFilters);
         getPromptHandler = BuildFilterPipeline(getPromptHandler, options.Filters.GetPromptFilters, handler =>
-            (request, cancellationToken) =>
+            async (request, cancellationToken) =>
             {
                 // Initial handler that sets MatchedPrimitive
                 if (request.Params?.Name is { } promptName && prompts is not null &&
@@ -496,7 +506,17 @@ internal sealed partial class McpServerImpl : McpServer
                     request.MatchedPrimitive = prompt;
                 }
 
-                return handler(request, cancellationToken);
+                try
+                {
+                    var result = await handler(request, cancellationToken).ConfigureAwait(false);
+                    GetPromptCompleted(request.Params?.Name ?? string.Empty);
+                    return result;
+                }
+                catch (Exception e)
+                {
+                    GetPromptError(request.Params?.Name ?? string.Empty, e);
+                    throw;
+                }
             });
 
         ServerCapabilities.Prompts.ListChanged = listChanged;
@@ -610,20 +630,35 @@ internal sealed partial class McpServerImpl : McpServer
 
                 try
                 {
-                    return await handler(request, cancellationToken).ConfigureAwait(false);
+                    var result = await handler(request, cancellationToken).ConfigureAwait(false);
+
+                    // Don't log here for task-augmented calls; logging happens asynchronously
+                    // in ExecuteToolAsTaskAsync when the tool actually completes.
+                    if (result.Task is null)
+                    {
+                        ToolCallCompleted(request.Params?.Name ?? string.Empty, result.IsError is true);
+                    }
+
+                    return result;
                 }
-                catch (Exception e) when (e is not OperationCanceledException and not McpProtocolException)
+                catch (Exception e)
                 {
                     ToolCallError(request.Params?.Name ?? string.Empty, e);
 
-                    string errorMessage = e is McpException ?
-                        $"An error occurred invoking '{request.Params?.Name}': {e.Message}" :
-                        $"An error occurred invoking '{request.Params?.Name}'.";
+                    if ((e is OperationCanceledException && cancellationToken.IsCancellationRequested) || e is McpProtocolException)
+                    {
+                        throw;
+                    }
 
                     return new()
                     {
                         IsError = true,
-                        Content = [new TextContentBlock { Text = errorMessage }],
+                        Content = [new TextContentBlock
+                        {
+                            Text = e is McpException ?
+                                $"An error occurred invoking '{request.Params?.Name}': {e.Message}" :
+                                $"An error occurred invoking '{request.Params?.Name}'.",
+                        }],
                     };
                 }
             });
@@ -944,6 +979,21 @@ internal sealed partial class McpServerImpl : McpServer
     [LoggerMessage(Level = LogLevel.Error, Message = "\"{ToolName}\" threw an unhandled exception.")]
     private partial void ToolCallError(string toolName, Exception exception);
 
+    [LoggerMessage(Level = LogLevel.Information, Message = "\"{ToolName}\" completed. IsError = {IsError}.")]
+    private partial void ToolCallCompleted(string toolName, bool isError);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "GetPrompt \"{PromptName}\" threw an unhandled exception.")]
+    private partial void GetPromptError(string promptName, Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "GetPrompt \"{PromptName}\" completed.")]
+    private partial void GetPromptCompleted(string promptName);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "ReadResource \"{ResourceUri}\" threw an unhandled exception.")]
+    private partial void ReadResourceError(string resourceUri, Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "ReadResource \"{ResourceUri}\" completed.")]
+    private partial void ReadResourceCompleted(string resourceUri);
+
     /// <summary>
     /// Executes a tool call as a task and returns a CallToolTaskResult immediately.
     /// </summary>
@@ -1004,6 +1054,7 @@ internal sealed partial class McpServerImpl : McpServer
 
                 // Invoke the tool with task-specific cancellation token
                 var result = await tool.InvokeAsync(request, taskCancellationToken).ConfigureAwait(false);
+                ToolCallCompleted(request.Params?.Name ?? string.Empty, result.IsError is true);
 
                 // Determine final status based on whether there was an error
                 var finalStatus = result.IsError is true ? McpTaskStatus.Failed : McpTaskStatus.Completed;
