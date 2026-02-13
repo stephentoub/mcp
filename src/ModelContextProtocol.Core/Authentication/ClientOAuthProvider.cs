@@ -154,7 +154,7 @@ internal sealed partial class ClientOAuthProvider : McpHttpClient
         // Try to refresh the access token if it is invalid and we have a refresh token.
         if (_authServerMetadata is not null && tokens?.RefreshToken is { Length: > 0 } refreshToken)
         {
-            var accessToken = await RefreshTokensAsync(refreshToken, resourceUri, _authServerMetadata, cancellationToken).ConfigureAwait(false);
+            var accessToken = await RefreshTokensAsync(refreshToken, resourceUri.ToString(), _authServerMetadata, cancellationToken).ConfigureAwait(false);
             return (accessToken, true);
         }
 
@@ -243,15 +243,26 @@ internal sealed partial class ClientOAuthProvider : McpHttpClient
             ThrowFailedToHandleUnauthorizedResponse("No authorization servers found in authentication challenge");
         }
 
+        // Convert string URIs to Uri objects for the selector
+        List<Uri> authServerUris = [];
+        foreach (var serverUriString in availableAuthorizationServers)
+        {
+            if (!Uri.TryCreate(serverUriString, UriKind.Absolute, out var serverUri))
+            {
+                ThrowFailedToHandleUnauthorizedResponse($"Invalid authorization server URI: '{serverUriString}'. Available servers: {string.Join(", ", availableAuthorizationServers)}");
+            }
+            authServerUris.Add(serverUri);
+        }
+
         // Select authorization server using configured strategy
-        var selectedAuthServer = _authServerSelector(availableAuthorizationServers);
+        var selectedAuthServer = _authServerSelector(authServerUris);
 
         if (selectedAuthServer is null)
         {
             ThrowFailedToHandleUnauthorizedResponse($"Authorization server selection returned null. Available servers: {string.Join(", ", availableAuthorizationServers)}");
         }
 
-        if (!availableAuthorizationServers.Contains(selectedAuthServer))
+        if (!authServerUris.Contains(selectedAuthServer))
         {
             ThrowFailedToHandleUnauthorizedResponse($"Authorization server selector returned a server not in the available list: {selectedAuthServer}. Available servers: {string.Join(", ", availableAuthorizationServers)}");
         }
@@ -387,13 +398,13 @@ internal sealed partial class ClientOAuthProvider : McpHttpClient
         }
     }
 
-    private async Task<string?> RefreshTokensAsync(string refreshToken, Uri resourceUri, AuthorizationServerMetadata authServerMetadata, CancellationToken cancellationToken)
+    private async Task<string?> RefreshTokensAsync(string refreshToken, string resourceUri, AuthorizationServerMetadata authServerMetadata, CancellationToken cancellationToken)
     {
         Dictionary<string, string> formFields = new()
         {
             ["grant_type"] = "refresh_token",
             ["refresh_token"] = refreshToken,
-            ["resource"] = resourceUri.ToString(),
+            ["resource"] = resourceUri,
         };
 
         using var request = CreateTokenRequest(authServerMetadata.TokenEndpoint, formFields);
@@ -443,7 +454,7 @@ internal sealed partial class ClientOAuthProvider : McpHttpClient
             ["response_type"] = "code",
             ["code_challenge"] = codeChallenge,
             ["code_challenge_method"] = "S256",
-            ["resource"] = resourceUri.ToString(),
+            ["resource"] = resourceUri,
         };
 
         var scope = GetScopeParameter(protectedResourceMetadata);
@@ -487,7 +498,7 @@ internal sealed partial class ClientOAuthProvider : McpHttpClient
             ["code"] = authorizationCode,
             ["redirect_uri"] = _redirectUri.ToString(),
             ["code_verifier"] = codeVerifier,
-            ["resource"] = resourceUri.ToString(),
+            ["resource"] = resourceUri,
         };
 
         using var request = CreateTokenRequest(authServerMetadata.TokenEndpoint, formFields);
@@ -659,7 +670,7 @@ internal sealed partial class ClientOAuthProvider : McpHttpClient
         }
     }
 
-    private static Uri GetRequiredResourceUri(ProtectedResourceMetadata protectedResourceMetadata)
+    private static string GetRequiredResourceUri(ProtectedResourceMetadata protectedResourceMetadata)
     {
         if (protectedResourceMetadata.Resource is null)
         {
@@ -730,6 +741,27 @@ internal sealed partial class ClientOAuthProvider : McpHttpClient
 
         builder.Append(uri.AbsolutePath.TrimEnd('/'));
         return builder.ToString();
+    }
+
+    /// <summary>
+    /// Normalizes a URI string for consistent comparison.
+    /// </summary>
+    /// <param name="uriString">The URI string to normalize.</param>
+    /// <returns>
+    /// A normalized string representation of the URI. If the string is a valid absolute URI,
+    /// it is parsed and normalized (scheme, host, port, and path without trailing slash).
+    /// If the string is not a valid absolute URI, only the trailing slash is removed.
+    /// </returns>
+    private static string NormalizeUri(string uriString)
+    {
+        // Parse the string as a URI to normalize it
+        if (!Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
+        {
+            // If it's not a valid URI, return the string with trailing slash removed
+            return uriString.TrimEnd('/');
+        }
+
+        return NormalizeUri(uri);
     }
 
     /// <summary>
